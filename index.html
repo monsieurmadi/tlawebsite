@@ -1,0 +1,1062 @@
+import { useState, useEffect, useRef } from "react";
+
+/* ─── CONSTANTS ─────────────────────────────────── */
+const GOLD = "#C9A84C";
+const GOLDL = "#E8C97A";
+const BLACK = "#0A0A0A";
+const CHAR = "#111111";
+const WHITE = "#F7F5F0";
+const MUTED = "#888";
+
+/* ─── TRANSLATIONS ───────────────────────────────── */
+const T = {
+  FR: {
+    nav: { realisations:"réalisations", testeur:"testeur d'idée IA", offres:"nos offres", process:"process", contact:"contact" },
+    hero: {
+      eyebrow:"Agence digitale · Website as a Service",
+      title:["Votre site web", "livré en", "7 jours."],
+      sub:"Des sites professionnels sur-mesure, à partir de 49€/mois.\nSans investissement initial. Sans mauvaise surprise.",
+      cta:"Voir les offres →", ctaSub:"Tester mon idée gratuitement",
+    },
+    stats:[{n:"7j",l:"Livraison garantie"},{n:"49€",l:"À partir de / mois"},{n:"0€",l:"Frais d'installation"}],
+    realisations:{
+      label:"Exemples de réalisations",
+      title:["Des sites qui","convertissent."],
+      sub:"Chaque site est pensé pour votre secteur, votre audience et votre objectif.",
+      visit:"Voir le site →",
+      note:"* Exemples illustratifs de notre style. Les projets et noms présentés sont fictifs.",
+      projects:[
+        {name:"Lucas Renard",role:"Photographe de mariage · Paris",tier:"Prestige · 149 €/mois",accent:"#1a1a1a",bg:"#0D0D0D",text:"#f0ebe3",badge:"Photographe"},
+        {name:"Marie Fontaine",role:"Coach de vie & business · Lyon",tier:"Signature · 89 €/mois",accent:"#7C9A7E",bg:"#F4F1EC",text:"#2d2d2d",badge:"Coach"},
+        {name:"Nour Benali",role:"Nail art & prothésiste · Lyon 6e",tier:"Signature · 89 €/mois",accent:"#C4836A",bg:"#FAF8F4",text:"#1A1A1A",badge:"Beauté"},
+        {name:"Thomas Ferreira",role:"Menuisier ébéniste · Bordeaux",tier:"Prestige · 149 €/mois",accent:"#C8A96E",bg:"#2A1E15",text:"#f0e8d8",badge:"Artisan"},
+      ],
+    },
+    testeur:{
+      label:"Testeur d'Idée IA",
+      title:"Votre projet est-il prêt\npour le succès ?",
+      f1:"Votre activité *", f1ph:"Ex: Ostéopathe à domicile",
+      f2:"Votre cible", f2ph:"Ex: Sportifs de haut niveau",
+      f3:"Détails du projet *", f3ph:"Qu'est-ce qui vous rend unique ? Décrivez votre projet...",
+      btn:"Analyser mon projet gratuitement →", loading:"Analyse des opportunités de marché...",
+      planTitle:"📋 Votre plan d'action personnalisé", planSub:"3 étapes concrètes pour transformer votre projet",
+      guideTitle:"Guide de lancement prêt",
+      guideSub:"Nous avons listé les 5 étapes critiques pour lancer votre projet en 7 jours.",
+      guideBtn:"Obtenir ma marche à suivre (Gratuit)",
+      resetBtn:"Tester une autre idée",
+      modalTitle:"Plan d'action détaillé",
+      modalSub:"Où devons-nous envoyer le guide PDF complet pour votre projet",
+      modalBtn:"Recevoir mon plan par mail →",
+      modalPh:"votre@email.com",
+    },
+    process:{
+      label:"Comment ça marche",
+      title:["Simple.","Rapide. Efficace."],
+      steps:[
+        {n:"01",t:"Vous remplissez le formulaire",d:"5 minutes. Votre activité, vos inspirations, vos objectifs."},
+        {n:"02",t:"On crée votre site",d:"Notre équipe conçoit un site premium, sur-mesure pour votre secteur."},
+        {n:"03",t:"Vous validez",d:"Une révision incluse pour les ajustements. Votre satisfaction est notre priorité."},
+        {n:"04",t:"Votre site est en ligne",d:"Vous recevez des clients. On gère la maintenance et les mises à jour."},
+      ],
+    },
+    guarantees:[
+      {icon:"⚡",m:"Livraison garantie en 7 jours",s:"Ou 1 mois offert"},
+      {icon:"🔒",m:"SSL + Hébergement inclus",s:"Zéro surprise technique"},
+      {icon:"📞",m:"Support humain inclus",s:"On répond, vraiment"},
+      {icon:"📄",m:"Contrat 100% transparent",s:"Tout est écrit clairement"},
+    ],
+    offres:{
+      label:"Nos offres",
+      title:["Choisissez votre","formule."],
+      note:"Engagement 12 mois · Reconduction tacite · Option de rachat disponible · 0€ de frais d'installation",
+      compare:"Comparez en un coup d'œil",
+      compareTitle:"Toutes les",
+      compareEm:"formules",
+      plans:[
+        {num:"01",name:"Essentiel",price:"49€",sub:"/ mois HT",badge:null,desc:"Pour exister en ligne et capter vos premiers clients dès la première semaine.",features:["Site one-page premium","Hébergement + SSL + domaine inclus","Formulaire de contact","SEO basique"],cta:"Démarrer avec Essentiel",hl:false},
+        {num:"02",name:"Signature",price:"89€",sub:"/ mois HT",badge:"Le plus choisi",desc:"Pour les indépendants qui veulent se démarquer et convertir activement.",features:["Site multi-pages jusqu'à 5 pages + blog","Prise de RDV en ligne","Google My Business","SEO avancé + copywriting basique"],cta:"Choisir Signature",hl:true},
+        {num:"03",name:"Prestige",price:"149€",sub:"/ mois HT",badge:null,desc:"Une présence digitale complète et sur-mesure, sans aucun compromis.",features:["Site multi-pages jusqu'à 8 pages + blog","Réservation en ligne ou e-commerce","SEO expert + suivi","Support prioritaire 7j/7"],cta:"Passer au Prestige",hl:false},
+      ],
+      rows:[
+        {label:"Pages incluses",e:"1 page",s:"5 pages + blog",p:"8 pages + blog"},
+        {label:"Hébergement + SSL + domaine",e:true,s:true,p:true},
+        {label:"Formulaire de contact",e:true,s:true,p:true},
+        {label:"SEO optimisé",e:"Basique",s:"Avancé",p:"Expert + suivi"},
+        {label:"Prise de RDV en ligne",e:false,s:true,p:true},
+        {label:"Google My Business",e:false,s:true,p:true},
+        {label:"Copywriting inclus",e:false,s:"Basique",p:"Approfondi"},
+        {label:"Blog",e:false,s:true,p:true},
+        {label:"Statistiques du site",e:false,s:true,p:true},
+        {label:"Réservation / e-commerce",e:false,s:false,p:true},
+        {label:"Modifications / mois",e:"1",s:"2",p:"4 (puis 29€/u)"},
+        {label:"Support",e:"Standard",s:"Standard",p:"Prioritaire 7j/7"},
+        {label:"Frais d'installation",e:"0€",s:"0€",p:"0€"},
+        {label:"Livraison garantie",e:"7 jours",s:"7 jours",p:"7 jours"},
+      ],
+      startCta:"Démarrer mon projet",
+    },
+    faq:{
+      label:"Questions fréquentes", title:"FAQ",
+      items:[
+        {q:"Est-ce que je possède mon site ?",a:"Vous louez un service complet : si vous arrêtez, le site est désactivé. Une option de rachat est disponible à tout moment."},
+        {q:"Combien de temps pour avoir mon site en ligne ?",a:"Garanti en 7 jours ouvrés après validation de vos contenus. Si nous dépassons ce délai, votre premier mois est offert."},
+        {q:"Que se passe-t-il si je veux arrêter ?",a:"L'engagement est de 12 mois avec reconduction tacite. Vous pouvez résilier à tout moment après cette période."},
+        {q:"Je n'ai pas de logo ni de charte graphique ?",a:"Pas du tout. Nous proposons un branding complet adapté à votre activité inclus dans chaque formule."},
+        {q:"Est-ce que vous travaillez avec tous les secteurs ?",a:"Nous ciblons principalement les indépendants, praticiens libéraux, artisans et coaches. Contactez-nous pour tout autre secteur."},
+      ],
+    },
+    contact:{
+      label:"Lancer mon projet",
+      title:["Prêt à être","visible en ligne ?"],
+      sub:"Remplissez ce formulaire et nous vous recontactons sous 24h pour démarrer votre projet.",
+      f1:"Prénom & Nom",f2:"Email professionnel",f3:"Téléphone",f4:"Votre secteur d'activité",
+      sectors:["Solopreneur / Indépendant","Ostéopathe / Kinésithérapeute","Coach / Thérapeute bien-être","Artisan / BTP","Professionnel libéral","Autre"],
+      f5:"Quelle formule vous intéresse ?",
+      formulas:["Essentiel — 49€/mois","Signature — 89€/mois","Prestige — 149€/mois","Je ne sais pas encore"],
+      f6:"Parlez-nous de votre activité et de vos objectifs...",
+      btn:"Envoyer ma demande →",
+      success:"Votre demande a bien été envoyée. Nous vous recontactons sous 24h.",
+    },
+    footer:{copy:"© 2026 The Lil Ax. Tous droits réservés.",made:"Fait depuis La Réunion, pour le monde entier."},
+    noteColors:{A:"#2D9B6F",B:"#4CAF50",C:"#F5A623",D:"#FF6B35",F:"#E8651A"},
+    noteLabels:{A:"Excellent. Foncez !",B:"Très bon potentiel",C:"Prometteur, à affiner",D:"Besoin de travail",F:"Trop tôt pour se lancer"},
+  },
+  EN: {
+    nav:{realisations:"work",testeur:"AI Idea Tester",offres:"plans",process:"process",contact:"contact"},
+    hero:{
+      eyebrow:"Digital Agency · Website as a Service",
+      title:["Your website","delivered in","7 days."],
+      sub:"Premium custom websites from €49/month.\nNo setup fee. No hidden costs.",
+      cta:"See plans →",ctaSub:"Test my idea for free",
+    },
+    stats:[{n:"7d",l:"Guaranteed delivery"},{n:"€49",l:"Starting from / month"},{n:"€0",l:"Setup fee"}],
+    realisations:{
+      label:"Our work",
+      title:["Sites built to","convert."],
+      sub:"Every site is designed for your sector, your audience and your goals.",
+      visit:"Visit site →",
+      note:"* Illustrative examples of our style. Projects and names shown are fictional.",
+      projects:[
+        {name:"Lucas Renard",role:"Wedding photographer · Paris",tier:"Prestige · €149/mo",accent:"#1a1a1a",bg:"#0D0D0D",text:"#f0ebe3",badge:"Photography"},
+        {name:"Marie Fontaine",role:"Life & business coach · Lyon",tier:"Signature · €89/mo",accent:"#7C9A7E",bg:"#F4F1EC",text:"#2d2d2d",badge:"Coaching"},
+        {name:"Nour Benali",role:"Nail art & nail tech · Lyon",tier:"Signature · €89/mo",accent:"#C4836A",bg:"#FAF8F4",text:"#1A1A1A",badge:"Beauty"},
+        {name:"Thomas Ferreira",role:"Joiner & cabinetmaker · Bordeaux",tier:"Prestige · €149/mo",accent:"#C8A96E",bg:"#2A1E15",text:"#f0e8d8",badge:"Craftsman"},
+      ],
+    },
+    testeur:{
+      label:"AI Idea Tester",
+      title:"Is your project ready\nfor success?",
+      f1:"Your activity *",f1ph:"E.g.: Mobile physiotherapist",
+      f2:"Your target",f2ph:"E.g.: High-level athletes",
+      f3:"Project details *",f3ph:"What makes you unique? Describe your project...",
+      btn:"Analyse my project for free →",loading:"Analysing market opportunities...",
+      planTitle:"📋 Your personalised action plan",planSub:"3 concrete steps to turn your project into reality",
+      guideTitle:"Launch guide ready",
+      guideSub:"We've mapped out the 5 critical steps to launch your project in 7 days.",
+      guideBtn:"Get my roadmap (Free)",
+      resetBtn:"Test another idea",
+      modalTitle:"Detailed action plan",
+      modalSub:"Where should we send the full PDF guide for your project",
+      modalBtn:"Send to my email →",
+      modalPh:"you@email.com",
+    },
+    process:{
+      label:"How it works",
+      title:["Simple.","Fast. Effective."],
+      steps:[
+        {n:"01",t:"Fill in the form",d:"5 minutes. Your activity, inspirations, and goals."},
+        {n:"02",t:"We build your site",d:"Our team designs a premium site tailored to your sector."},
+        {n:"03",t:"You validate",d:"One revision included. Your satisfaction is our priority."},
+        {n:"04",t:"Your site goes live",d:"You get clients. We handle maintenance and updates."},
+      ],
+    },
+    guarantees:[
+      {icon:"⚡",m:"Delivery guaranteed in 7 days",s:"Or first month free"},
+      {icon:"🔒",m:"SSL + Hosting included",s:"Zero technical surprises"},
+      {icon:"📞",m:"Human support included",s:"We actually respond"},
+      {icon:"📄",m:"100% transparent contract",s:"Everything in writing"},
+    ],
+    offres:{
+      label:"Our plans",
+      title:["Choose your","plan."],
+      note:"12-month commitment · Auto-renewal · Buy-out option available · €0 setup fee",
+      compare:"Compare at a glance",
+      compareTitle:"All",
+      compareEm:"plans",
+      plans:[
+        {num:"01",name:"Essential",price:"€49",sub:"/ mo excl. VAT",badge:null,desc:"To exist online and attract your first clients from day one.",features:["One-page premium site","Hosting + SSL + domain included","Contact form","Basic SEO"],cta:"Start with Essential",hl:false},
+        {num:"02",name:"Signature",price:"€89",sub:"/ mo excl. VAT",badge:"Most popular",desc:"For freelancers who want to stand out and actively convert.",features:["Multi-page site up to 5 pages + blog","Online booking","Google My Business","Advanced SEO + basic copywriting"],cta:"Choose Signature",hl:true},
+        {num:"03",name:"Prestige",price:"€149",sub:"/ mo excl. VAT",badge:null,desc:"A complete, tailor-made digital presence with zero compromise.",features:["Multi-page site up to 8 pages + blog","Online booking or e-commerce","Expert SEO + monitoring","Priority support 7 days/7"],cta:"Go Prestige",hl:false},
+      ],
+      rows:[
+        {label:"Pages included",e:"1 page",s:"5 pages + blog",p:"8 pages + blog"},
+        {label:"Hosting + SSL + domain",e:true,s:true,p:true},
+        {label:"Contact form",e:true,s:true,p:true},
+        {label:"SEO",e:"Basic",s:"Advanced",p:"Expert + monitoring"},
+        {label:"Online booking",e:false,s:true,p:true},
+        {label:"Google My Business",e:false,s:true,p:true},
+        {label:"Copywriting",e:false,s:"Basic",p:"In-depth"},
+        {label:"Blog",e:false,s:true,p:true},
+        {label:"Site analytics",e:false,s:true,p:true},
+        {label:"Booking / e-commerce",e:false,s:false,p:true},
+        {label:"Edits / month",e:"1",s:"2",p:"4 (then €29/u)"},
+        {label:"Support",e:"Standard",s:"Standard",p:"Priority 7d/7"},
+        {label:"Setup fee",e:"€0",s:"€0",p:"€0"},
+        {label:"Guaranteed delivery",e:"7 days",s:"7 days",p:"7 days"},
+      ],
+      startCta:"Start my project",
+    },
+    faq:{
+      label:"Frequently asked questions",title:"FAQ",
+      items:[
+        {q:"Do I own my website?",a:"You rent a full service: if you cancel, the site is deactivated. A buy-out option is available at any time."},
+        {q:"How long before my site is live?",a:"Guaranteed within 7 business days after content validation. If we exceed this, your first month is free."},
+        {q:"What if I want to cancel?",a:"12-month commitment with auto-renewal. You can cancel at any time after that period."},
+        {q:"What if I have no logo or branding?",a:"No problem. We offer full branding tailored to your activity, included in every plan."},
+        {q:"Do you work with all sectors?",a:"We mainly target freelancers, independent practitioners, craftspeople and coaches. Contact us for anything else."},
+      ],
+    },
+    contact:{
+      label:"Start my project",
+      title:["Ready to be","visible online?"],
+      sub:"Fill in this form and we'll get back to you within 24h to kick off your project.",
+      f1:"First & Last name",f2:"Professional email",f3:"Phone",f4:"Your sector",
+      sectors:["Freelancer / Solopreneur","Physiotherapist / Osteopath","Coach / Wellness therapist","Craftsperson / Trades","Liberal professional","Other"],
+      f5:"Which plan interests you?",
+      formulas:["Essential — €49/mo","Signature — €89/mo","Prestige — €149/mo","Not sure yet"],
+      f6:"Tell us about your activity and goals...",
+      btn:"Send my request →",
+      success:"Your request has been sent. We'll get back to you within 24h.",
+    },
+    footer:{copy:"© 2026 The Lil Ax. All rights reserved.",made:"Built from Réunion Island, for the world."},
+    noteColors:{A:"#2D9B6F",B:"#4CAF50",C:"#F5A623",D:"#FF6B35",F:"#E8651A"},
+    noteLabels:{A:"Excellent. Go for it!",B:"Very strong potential",C:"Promising, refine it",D:"Needs more work",F:"Too early to launch"},
+  },
+  PT: {
+    nav:{realisations:"trabalhos",testeur:"Testador de Ideia IA",offres:"planos",process:"processo",contact:"contacto"},
+    hero:{
+      eyebrow:"Agência digital · Website as a Service",
+      title:["O seu site web","entregue em","7 dias."],
+      sub:"Sites profissionais personalizados a partir de 49€/mês.\nSem investimento inicial. Sem surpresas.",
+      cta:"Ver planos →",ctaSub:"Testar a minha ideia gratuitamente",
+    },
+    stats:[{n:"7d",l:"Entrega garantida"},{n:"49€",l:"A partir de / mês"},{n:"0€",l:"Taxa de instalação"}],
+    realisations:{
+      label:"Trabalhos realizados",
+      title:["Sites criados para","converter."],
+      sub:"Cada site é pensado para o seu setor, o seu público e os seus objetivos.",
+      visit:"Visitar →",
+      note:"* Exemplos ilustrativos do nosso estilo. Os projetos e nomes apresentados são fictícios.",
+      projects:[
+        {name:"Lucas Renard",role:"Fotógrafo de casamentos · Paris",tier:"Prestígio · 149 €/mês",accent:"#1a1a1a",bg:"#0D0D0D",text:"#f0ebe3",badge:"Fotografia"},
+        {name:"Marie Fontaine",role:"Coach de vida & negócios · Lyon",tier:"Signature · 89 €/mês",accent:"#7C9A7E",bg:"#F4F1EC",text:"#2d2d2d",badge:"Coaching"},
+        {name:"Nour Benali",role:"Nail art & prótese ungueal · Lyon",tier:"Signature · 89 €/mês",accent:"#C4836A",bg:"#FAF8F4",text:"#1A1A1A",badge:"Beleza"},
+        {name:"Thomas Ferreira",role:"Marceneiro & ebanista · Bordeaux",tier:"Prestígio · 149 €/mês",accent:"#C8A96E",bg:"#2A1E15",text:"#f0e8d8",badge:"Artesão"},
+      ],
+    },
+    testeur:{
+      label:"Testador de Ideia IA",
+      title:"O seu projeto está pronto\npara o sucesso?",
+      f1:"A sua atividade *",f1ph:"Ex: Osteopata ao domicílio",
+      f2:"O seu público-alvo",f2ph:"Ex: Desportistas de alto nível",
+      f3:"Detalhes do projeto *",f3ph:"O que o torna único? Descreva o seu projeto...",
+      btn:"Analisar o meu projeto gratuitamente →",loading:"A analisar oportunidades de mercado...",
+      planTitle:"📋 O seu plano de ação personalizado",planSub:"3 etapas concretas para transformar o seu projeto",
+      guideTitle:"Guia de lançamento pronto",
+      guideSub:"Listámos os 5 passos críticos para lançar o seu projeto em 7 dias.",
+      guideBtn:"Obter o meu roteiro (Grátis)",
+      resetBtn:"Testar outra ideia",
+      modalTitle:"Plano de ação detalhado",
+      modalSub:"Para onde devemos enviar o guia PDF completo para o seu projeto",
+      modalBtn:"Receber o meu plano por email →",
+      modalPh:"o.seu@email.com",
+    },
+    process:{
+      label:"Como funciona",
+      title:["Simples.","Rápido. Eficaz."],
+      steps:[
+        {n:"01",t:"Preenche o formulário",d:"5 minutos. A sua atividade, inspirações e objetivos."},
+        {n:"02",t:"Criamos o seu site",d:"A nossa equipa concebe um site premium à medida do seu setor."},
+        {n:"03",t:"Valida o resultado",d:"Uma revisão incluída. A sua satisfação é a nossa prioridade."},
+        {n:"04",t:"O seu site fica online",d:"Recebe clientes. Nós tratamos da manutenção e das atualizações."},
+      ],
+    },
+    guarantees:[
+      {icon:"⚡",m:"Entrega garantida em 7 dias",s:"Ou 1 mês oferecido"},
+      {icon:"🔒",m:"SSL + Alojamento incluídos",s:"Zero surpresas técnicas"},
+      {icon:"📞",m:"Suporte humano incluído",s:"Respondemos mesmo"},
+      {icon:"📄",m:"Contrato 100% transparente",s:"Tudo escrito claramente"},
+    ],
+    offres:{
+      label:"Os nossos planos",
+      title:["Escolha o seu","plano."],
+      note:"Compromisso 12 meses · Renovação automática · Opção de compra disponível · 0€ de instalação",
+      compare:"Compare num relance",
+      compareTitle:"Todos os",
+      compareEm:"planos",
+      plans:[
+        {num:"01",name:"Essencial",price:"49€",sub:"/ mês s/ IVA",badge:null,desc:"Para existir online e captar os seus primeiros clientes desde a primeira semana.",features:["Site one-page premium","Alojamento + SSL + domínio incluídos","Formulário de contacto","SEO básico"],cta:"Começar com Essencial",hl:false},
+        {num:"02",name:"Signature",price:"89€",sub:"/ mês s/ IVA",badge:"O mais escolhido",desc:"Para independentes que querem destacar-se e converter ativamente.",features:["Site multi-páginas até 5 páginas + blog","Marcações online","Google My Business","SEO avançado + copywriting básico"],cta:"Escolher Signature",hl:true},
+        {num:"03",name:"Prestígio",price:"149€",sub:"/ mês s/ IVA",badge:null,desc:"Uma presença digital completa e personalizada, sem qualquer compromisso.",features:["Site multi-páginas até 8 páginas + blog","Reservas online ou e-commerce","SEO expert + acompanhamento","Suporte prioritário 7 dias/7"],cta:"Passar ao Prestígio",hl:false},
+      ],
+      rows:[
+        {label:"Páginas incluídas",e:"1 página",s:"5 páginas + blog",p:"8 páginas + blog"},
+        {label:"Alojamento + SSL + domínio",e:true,s:true,p:true},
+        {label:"Formulário de contacto",e:true,s:true,p:true},
+        {label:"SEO",e:"Básico",s:"Avançado",p:"Expert + acomp."},
+        {label:"Marcações online",e:false,s:true,p:true},
+        {label:"Google My Business",e:false,s:true,p:true},
+        {label:"Copywriting",e:false,s:"Básico",p:"Aprofundado"},
+        {label:"Blog",e:false,s:true,p:true},
+        {label:"Estatísticas do site",e:false,s:true,p:true},
+        {label:"Reservas / e-commerce",e:false,s:false,p:true},
+        {label:"Alterações / mês",e:"1",s:"2",p:"4 (depois 29€/u)"},
+        {label:"Suporte",e:"Standard",s:"Standard",p:"Prioritário 7d/7"},
+        {label:"Taxa de instalação",e:"0€",s:"0€",p:"0€"},
+        {label:"Entrega garantida",e:"7 dias",s:"7 dias",p:"7 dias"},
+      ],
+      startCta:"Iniciar o meu projeto",
+    },
+    faq:{
+      label:"Perguntas frequentes",title:"FAQ",
+      items:[
+        {q:"O site é meu?",a:"Aluga um serviço completo: se cancelar, o site é desativado. Uma opção de compra está disponível a qualquer momento."},
+        {q:"Quanto tempo até o site estar online?",a:"Garantido em 7 dias úteis após validação dos conteúdos. Se excedermos este prazo, o primeiro mês é oferecido."},
+        {q:"O que acontece se quiser cancelar?",a:"Compromisso de 12 meses com renovação automática. Pode cancelar a qualquer momento após esse período."},
+        {q:"Não tenho logótipo nem identidade visual?",a:"Não há problema. Oferecemos um branding completo adaptado à sua atividade, incluído em todos os planos."},
+        {q:"Trabalham com todos os setores?",a:"Focamo-nos principalmente em independentes, profissionais liberais, artesãos e coaches. Contacte-nos para outros setores."},
+      ],
+    },
+    contact:{
+      label:"Iniciar o meu projeto",
+      title:["Pronto para ser","visível online?"],
+      sub:"Preencha este formulário e entraremos em contacto em 24h para iniciar o seu projeto.",
+      f1:"Nome e Apelido",f2:"Email profissional",f3:"Telefone",f4:"O seu setor de atividade",
+      sectors:["Solopreneur / Independente","Fisioterapeuta / Osteopata","Coach / Terapeuta bem-estar","Artesão / Construção","Profissional liberal","Outro"],
+      f5:"Qual plano lhe interessa?",
+      formulas:["Essencial — 49€/mês","Signature — 89€/mês","Prestígio — 149€/mês","Ainda não sei"],
+      f6:"Fale-nos da sua atividade e objetivos...",
+      btn:"Enviar o meu pedido →",
+      success:"O seu pedido foi enviado. Entraremos em contacto em menos de 24h.",
+    },
+    footer:{copy:"© 2026 The Lil Ax. Todos os direitos reservados.",made:"Criado na ilha da Reunião, para o mundo inteiro."},
+    noteColors:{A:"#2D9B6F",B:"#4CAF50",C:"#F5A623",D:"#FF6B35",F:"#E8651A"},
+    noteLabels:{A:"Excelente. Avance!",B:"Muito bom potencial",C:"Promissor, a afinar",D:"Precisa de trabalho",F:"Cedo demais para lançar"},
+  },
+};
+
+/* ─── SITE PREVIEWS SVG ──────────────────────────── */
+const Previews = {
+  0: ({accent,bg,text}) => (
+    <svg viewBox="0 0 400 220" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <rect width="400" height="220" fill={bg}/>
+      <rect x="200" y="0" width="200" height="220" fill="#141414"/>
+      <text x="22" y="28" fontFamily="Georgia,serif" fontSize="10" fill={text} opacity="0.9">Lucas Renard</text>
+      <text x="22" y="38" fontFamily="sans-serif" fontSize="6" fill={text} opacity="0.3" letterSpacing="2">PHOTOGRAPHE</text>
+      <text x="290" y="31" fontFamily="sans-serif" fontSize="6" fill={text} opacity="0.35" letterSpacing="1">portfolio</text>
+      <text x="340" y="31" fontFamily="sans-serif" fontSize="6" fill={text} opacity="0.35" letterSpacing="1">contact</text>
+      <line x1="0" y1="46" x2="196" y2="46" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5"/>
+      <rect x="22" y="54" width="25" height="1" fill={accent}/>
+      <text x="22" y="88" fontFamily="Georgia,serif" fontSize="18" fill={text} fontStyle="italic">L'Instant</text>
+      <text x="22" y="110" fontFamily="Georgia,serif" fontSize="18" fill={accent}>Préservé</text>
+      <text x="22" y="128" fontFamily="sans-serif" fontSize="7" fill={text} opacity="0.3" letterSpacing="0.5">Paris · Île-de-France · Destination</text>
+      <rect x="22" y="142" width="95" height="24" fill={accent}/>
+      <text x="69" y="157" fontFamily="sans-serif" fontSize="7" fill="#000" textAnchor="middle" letterSpacing="1.5">DÉCOUVRIR</text>
+      <rect x="210" y="8" width="180" height="205" fill="#1a1a1a" rx="1"/>
+      <rect x="210" y="8" width="180" height="205" fill="url(#lg0)"/>
+      <rect x="0" y="190" width="196" height="30" fill="#0a0a0a"/>
+      <rect x="4" y="193" width="38" height="24" fill="#181818"/>
+      <rect x="46" y="193" width="38" height="24" fill="#161616"/>
+      <rect x="88" y="193" width="38" height="24" fill="#141414"/>
+      <rect x="130" y="193" width="62" height="24" fill="#121212"/>
+      <defs><linearGradient id="lg0" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#2a2a2a"/><stop offset="100%" stopColor="#0a0a0a"/></linearGradient></defs>
+    </svg>
+  ),
+  1: ({accent,bg,text}) => (
+    <svg viewBox="0 0 400 220" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <rect width="400" height="220" fill={bg}/>
+      <text x="22" y="28" fontFamily="Georgia,serif" fontSize="10" fill={text} opacity="0.9">Marie Fontaine</text>
+      <text x="22" y="38" fontFamily="sans-serif" fontSize="6" fill={text} opacity="0.3" letterSpacing="2">COACH</text>
+      <text x="300" y="31" fontFamily="sans-serif" fontSize="6" fill={text} opacity="0.35">approche</text>
+      <text x="350" y="31" fontFamily="sans-serif" fontSize="6" fill={text} opacity="0.35">contact</text>
+      <line x1="0" y1="46" x2="400" y2="46" stroke={accent} strokeWidth="0.4" opacity="0.2"/>
+      <rect x="0" y="46" width="198" height="174" fill={bg}/>
+      <rect x="198" y="46" width="202" height="174" fill="#eae7e0"/>
+      <rect x="22" y="62" width="22" height="1" fill={accent} opacity="0.5"/>
+      <text x="22" y="90" fontFamily="Georgia,serif" fontSize="16" fill={text} fontStyle="italic">Reprendre</text>
+      <text x="22" y="110" fontFamily="Georgia,serif" fontSize="16" fill={text} fontStyle="italic">sa vie</text>
+      <text x="22" y="130" fontFamily="Georgia,serif" fontSize="16" fill={accent}>en main.</text>
+      <text x="22" y="148" fontFamily="sans-serif" fontSize="7" fill={text} opacity="0.38">Coaching individuel et collectif</text>
+      <rect x="22" y="160" width="65" height="14" rx="7" fill={accent} opacity="0.14"/>
+      <text x="54" y="170" fontFamily="sans-serif" fontSize="6" fill={accent} textAnchor="middle">La boule au ventre</text>
+      <rect x="92" y="160" width="58" height="14" rx="7" fill={accent} opacity="0.1"/>
+      <text x="121" y="170" fontFamily="sans-serif" fontSize="6" fill={accent} textAnchor="middle">Le syndrome</text>
+      <rect x="22" y="184" width="100" height="24" fill={text}/>
+      <text x="72" y="199" fontFamily="sans-serif" fontSize="7" fill="#fff" textAnchor="middle" letterSpacing="0.8">PREMIÈRE SÉANCE</text>
+      <rect x="207" y="54" width="185" height="160" fill="#d0c9c0" rx="1"/>
+      <rect x="207" y="54" width="185" height="160" fill="url(#lg1)"/>
+      <defs><linearGradient id="lg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#cec6bc"/><stop offset="100%" stopColor="#b8b0a6"/></linearGradient></defs>
+    </svg>
+  ),
+  2: ({accent,bg,text}) => (
+    <svg viewBox="0 0 400 220" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <rect width="400" height="220" fill={bg}/>
+      <text x="22" y="26" fontFamily="Georgia,serif" fontSize="10" fill={text} opacity="0.9">Nour Benali</text>
+      <text x="22" y="36" fontFamily="sans-serif" fontSize="6" fill={text} opacity="0.3" letterSpacing="2">NAIL ART · LYON 6E</text>
+      <text x="308" y="30" fontFamily="sans-serif" fontSize="6" fill={text} opacity="0.35">réserver</text>
+      <text x="356" y="30" fontFamily="sans-serif" fontSize="6" fill={text} opacity="0.35">galerie</text>
+      <line x1="0" y1="44" x2="400" y2="44" stroke={accent} strokeWidth="0.3" opacity="0.15"/>
+      <rect x="198" y="44" width="202" height="176" fill="#ede8e2"/>
+      <text x="22" y="68" fontFamily="sans-serif" fontSize="6" fill={text} opacity="0.28" letterSpacing="2.5">NAIL ARTIST · LYON</text>
+      <rect x="22" y="74" width="25" height="1" fill={accent}/>
+      <text x="22" y="100" fontFamily="Georgia,serif" fontSize="17" fill={text} fontStyle="italic">L'art sur</text>
+      <text x="22" y="121" fontFamily="Georgia,serif" fontSize="17" fill={accent}>vos mains.</text>
+      <text x="22" y="139" fontFamily="sans-serif" fontSize="7" fill={text} opacity="0.38">Pose gel · Nail art · Lyon 6e</text>
+      <rect x="22" y="152" width="52" height="15" rx="7.5" fill={accent} opacity="0.12"/>
+      <text x="48" y="162" fontFamily="sans-serif" fontSize="6" fill={accent} textAnchor="middle">Pose gel</text>
+      <rect x="78" y="152" width="60" height="15" rx="7.5" fill={accent} opacity="0.1"/>
+      <text x="108" y="162" fontFamily="sans-serif" fontSize="6" fill={accent} textAnchor="middle">Remplissage</text>
+      <rect x="22" y="178" width="90" height="24" fill="#1A1A1A"/>
+      <text x="67" y="193" fontFamily="sans-serif" fontSize="7" fill="#fff" textAnchor="middle" letterSpacing="1.5">RÉSERVER</text>
+      <rect x="206" y="52" width="188" height="162" fill="#ddd4c8" rx="1"/>
+      <circle cx="300" cy="133" r="42" fill={accent} opacity="0.12"/>
+      <circle cx="300" cy="133" r="26" fill={accent} opacity="0.18"/>
+      <circle cx="300" cy="133" r="12" fill={accent} opacity="0.3"/>
+    </svg>
+  ),
+  3: ({accent,bg,text}) => (
+    <svg viewBox="0 0 400 220" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <rect width="400" height="220" fill={bg}/>
+      <line x1="0" y1="68" x2="400" y2="66" stroke="#3a2a1a" strokeWidth="0.5" opacity="0.5"/>
+      <line x1="0" y1="110" x2="400" y2="112" stroke="#3a2a1a" strokeWidth="0.3" opacity="0.3"/>
+      <line x1="0" y1="155" x2="400" y2="152" stroke="#3a2a1a" strokeWidth="0.4" opacity="0.35"/>
+      <text x="22" y="26" fontFamily="Georgia,serif" fontSize="10" fill={text} opacity="0.9">Thomas Ferreira</text>
+      <text x="22" y="36" fontFamily="sans-serif" fontSize="6" fill={text} opacity="0.3" letterSpacing="2">MENUISIER ÉBÉNISTE</text>
+      <text x="284" y="29" fontFamily="sans-serif" fontSize="6" fill={text} opacity="0.3">réalisations</text>
+      <text x="348" y="29" fontFamily="sans-serif" fontSize="6" fill={text} opacity="0.3">contact</text>
+      <line x1="0" y1="44" x2="400" y2="44" stroke={accent} strokeWidth="0.4" opacity="0.12"/>
+      <rect x="0" y="44" width="236" height="176" fill="#1e1409"/>
+      <rect x="236" y="44" width="164" height="176" fill="#231708"/>
+      <text x="26" y="72" fontFamily="sans-serif" fontSize="6" fill={text} opacity="0.25" letterSpacing="2.5">BORDEAUX · DEPUIS 2012</text>
+      <rect x="26" y="79" width="30" height="1" fill={accent}/>
+      <text x="26" y="107" fontFamily="Georgia,serif" fontSize="18" fill={text} fontStyle="italic">Le bois,</text>
+      <text x="26" y="129" fontFamily="Georgia,serif" fontSize="18" fill={accent}>façonné</text>
+      <text x="26" y="151" fontFamily="Georgia,serif" fontSize="18" fill={text} fontStyle="italic">à la main.</text>
+      <rect x="26" y="168" width="198" height="38" fill="rgba(200,169,110,0.05)"/>
+      <text x="58" y="183" fontFamily="Georgia,serif" fontSize="11" fill={accent} fontStyle="italic" textAnchor="middle">12</text>
+      <text x="58" y="196" fontFamily="sans-serif" fontSize="5" fill={text} opacity="0.28" letterSpacing="1" textAnchor="middle">ANS</text>
+      <text x="110" y="183" fontFamily="Georgia,serif" fontSize="11" fill={accent} fontStyle="italic" textAnchor="middle">+200</text>
+      <text x="110" y="196" fontFamily="sans-serif" fontSize="5" fill={text} opacity="0.28" letterSpacing="1" textAnchor="middle">PROJETS</text>
+      <text x="170" y="183" fontFamily="Georgia,serif" fontSize="10" fill={accent} fontStyle="italic" textAnchor="middle">Sur-mesure</text>
+      <text x="170" y="196" fontFamily="sans-serif" fontSize="5" fill={text} opacity="0.28" letterSpacing="1" textAnchor="middle">100%</text>
+      <rect x="244" y="52" width="148" height="162" fill="#2e1e0e" rx="1"/>
+      <rect x="244" y="52" width="148" height="162" fill="url(#lg3)"/>
+      <rect x="272" y="90" width="52" height="3" fill={accent} opacity="0.22" rx="1.5"/>
+      <rect x="280" y="100" width="36" height="3" fill={accent} opacity="0.15" rx="1.5"/>
+      <rect x="268" y="110" width="60" height="2" fill={accent} opacity="0.1" rx="1"/>
+      <defs><linearGradient id="lg3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#3d2510"/><stop offset="100%" stopColor="#180e05"/></linearGradient></defs>
+    </svg>
+  ),
+};
+
+/* ─── CELL VALUE ────────────────────────────────── */
+const Cell = ({v}) => {
+  if (v === true) return <span style={{color:GOLD,fontSize:"1.05rem",fontWeight:700}}>✓</span>;
+  if (v === false) return <span style={{color:"rgba(10,10,10,0.15)",fontSize:"1.05rem"}}>—</span>;
+  return <span>{v}</span>;
+};
+
+/* ─── MAIN ──────────────────────────────────────── */
+export default function TheLilAx() {
+  const [lang, setLang] = useState("FR");
+  const t = T[lang];
+
+  const curRef = useRef(null);
+  const folRef = useRef(null);
+  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [openFaq, setOpenFaq] = useState(null);
+  const [contactSent, setContactSent] = useState(false);
+
+  // Testeur state
+  const [vStep, setVStep] = useState("form");
+  const [vForm, setVForm] = useState({activite:"",cible:"",description:""});
+  const [vResult, setVResult] = useState(null);
+  const [vEmail, setVEmail] = useState("");
+  const [vModal, setVModal] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 60);
+    window.addEventListener("scroll", onScroll);
+    let rafId;
+    const mouse = {x:0,y:0}, follower = {x:0,y:0};
+    const onMove = (e) => { mouse.x = e.clientX; mouse.y = e.clientY; if(curRef.current) { curRef.current.style.transform = `translate(${e.clientX-6}px,${e.clientY-6}px)`; } };
+    window.addEventListener("mousemove", onMove);
+    const loop = () => {
+      follower.x += (mouse.x - follower.x) * 0.1;
+      follower.y += (mouse.y - follower.y) * 0.1;
+      if (folRef.current) folRef.current.style.transform = `translate(${follower.x-16}px,${follower.y-16}px)`;
+      rafId = requestAnimationFrame(loop);
+    };
+    rafId = requestAnimationFrame(loop);
+    const obs = new IntersectionObserver((entries) => entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add("revealed"); obs.unobserve(e.target); } }), {threshold:0.08});
+    document.querySelectorAll(".reveal").forEach(el => obs.observe(el));
+    return () => { window.removeEventListener("scroll", onScroll); window.removeEventListener("mousemove", onMove); cancelAnimationFrame(rafId); obs.disconnect(); };
+  }, []);
+
+  const scrollTo = (id) => { setMenuOpen(false); document.getElementById(id)?.scrollIntoView({behavior:"smooth"}); };
+
+  const analyseIdea = async () => {
+    if (!vForm.activite || !vForm.description) return;
+    setVStep("loading");
+    setVResult(null);
+    try {
+      const prompt = `Activité: ${vForm.activite}${vForm.cible ? ` | Cible: ${vForm.cible}` : ""} | Détails: ${vForm.description}`;
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({
+          model:"claude-sonnet-4-20250514",
+          max_tokens:1000,
+          system:`Tu es un analyste business expert pour solopreneurs et artisans. Réponds UNIQUEMENT en JSON valide, sans backticks ni markdown, dans la langue de l'utilisateur. Format strict: {"note":"A","titre":"Titre court","arguments":["arg1","arg2","arg3"],"recommandation":"TOP","plan_action":[{"etape":"Étape 1","action":"Description concrète"},{"etape":"Étape 2","action":"Description concrète"},{"etape":"Étape 3","action":"Description concrète"}]}. Note de A (excellent) à F (trop tôt).`,
+          messages:[{role:"user",content:prompt}],
+        }),
+      });
+      const data = await res.json();
+      const raw = data.content?.[0]?.text || "{}";
+      const parsed = JSON.parse(raw.replace(/```json|```/g,"").trim());
+      setVResult(parsed);
+      setVStep("result");
+    } catch {
+      setVResult({note:"?",titre:"Erreur d'analyse",arguments:["Réessaie dans un instant."],recommandation:"",plan_action:[]});
+      setVStep("result");
+    }
+  };
+
+  const noteColor = (note) => t.noteColors?.[note] || GOLD;
+  const noteLabel = (note) => t.noteLabels?.[note] || "";
+  const resetV = () => { setVStep("form"); setVResult(null); setVForm({activite:"",cible:"",description:""}); };
+
+  return (
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=DM+Sans:wght@300;400;500;600&display=swap');
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+        :root{--gold:${GOLD};--goldl:${GOLDL};--black:${BLACK};--char:${CHAR};--white:${WHITE};--muted:${MUTED}}
+        html{scroll-behavior:smooth}
+        body{background:var(--black);color:var(--white);font-family:'DM Sans',sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+        .cur{position:fixed;width:12px;height:12px;background:var(--gold);border-radius:50%;pointer-events:none;z-index:9999;will-change:transform;animation:curPulse 2s ease-in-out infinite}
+        .fol{position:fixed;width:32px;height:32px;border:1px solid rgba(201,168,76,.45);border-radius:50%;pointer-events:none;z-index:9998;will-change:transform;animation:folGlow 2s ease-in-out infinite}
+        @keyframes curPulse{0%,100%{box-shadow:0 0 0 0 rgba(201,168,76,.6),0 0 8px rgba(201,168,76,.4)}50%{box-shadow:0 0 0 6px rgba(201,168,76,0),0 0 18px rgba(201,168,76,.7)}}
+        @keyframes folGlow{0%,100%{border-color:rgba(201,168,76,.3);box-shadow:0 0 6px rgba(201,168,76,.1)}50%{border-color:rgba(201,168,76,.8);box-shadow:0 0 16px rgba(201,168,76,.35)}}
+        @media(max-width:768px){.cur,.fol{display:none}}
+        ::-webkit-scrollbar{width:2px}::-webkit-scrollbar-track{background:var(--black)}::-webkit-scrollbar-thumb{background:var(--gold)}
+        nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:1.4rem 2.5rem;transition:all .4s ease}
+        nav.sc{background:rgba(10,10,10,.95);backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,.08)}
+        .logo{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--white);background:none;border:none}
+        .logo em{color:var(--gold);font-style:italic}
+        .navlinks{display:flex;gap:1.6rem;align-items:center}
+        @media(max-width:860px){.navlinks{display:none}}
+        .nl{font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;color:var(--white);background:none;border:none;opacity:.65;transition:opacity .3s}
+        .nl:hover{opacity:1}
+        .nc{font-size:.66rem;letter-spacing:.15em;text-transform:uppercase;color:var(--black);background:var(--gold);border:none;padding:.6rem 1.4rem;font-weight:600;transition:background .3s}
+        .nc:hover{background:var(--goldl)}
+        @media(max-width:860px){.nc{display:none}}
+        .lang-wrap{display:flex;gap:2px;border-left:1px solid rgba(255,255,255,.08);padding-left:1.2rem;margin-left:.4rem}
+        .lb{background:none;border:none;font-family:'DM Sans',sans-serif;font-size:.68rem;letter-spacing:.1em;padding:4px 7px;transition:color .2s,border-bottom .2s}
+        .burger{display:none;flex-direction:column;gap:5px;background:none;border:none}
+        @media(max-width:860px){.burger{display:flex}}
+        .burger span{display:block;width:22px;height:1.5px;background:var(--white);transition:all .3s}
+        .burger.op span:nth-child(1){transform:translateY(6.5px) rotate(45deg)}
+        .burger.op span:nth-child(2){opacity:0}
+        .burger.op span:nth-child(3){transform:translateY(-6.5px) rotate(-45deg)}
+        .mobmenu{position:fixed;inset:0;background:rgba(10,10,10,.98);z-index:150;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2rem;opacity:0;pointer-events:none;transition:opacity .4s}
+        .mobmenu.op{opacity:1;pointer-events:all}
+        .mml{font-family:'Playfair Display',serif;font-size:1.9rem;font-weight:700;color:var(--white);background:none;border:none;transition:color .3s;text-transform:uppercase}
+        .mml:hover{color:var(--gold)}
+        @keyframes heroIn{from{opacity:0;transform:translateY(50px)}to{opacity:1;transform:none}}
+        @keyframes bounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(8px)}}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+        .reveal{opacity:0;transform:translateY(30px);transition:opacity .75s ease,transform .75s ease}
+        .reveal.revealed{opacity:1;transform:none}
+        .d1{transition-delay:.1s}.d2{transition-delay:.22s}.d3{transition-delay:.36s}.d4{transition-delay:.5s}
+        .seclight{background:var(--white);color:var(--black);border-radius:2.5rem 2.5rem 0 0;padding:5rem 2rem;position:relative;z-index:2}
+        .seclight-first{margin-top:0;border-radius:0}
+        .secdark{background:var(--char);padding:5rem 2rem}
+        .ctn{max-width:1060px;margin:0 auto}
+        .eye{font-size:.62rem;letter-spacing:.35em;text-transform:uppercase;color:var(--gold);margin-bottom:.5rem}
+        .eyed{color:rgba(10,10,10,.4) !important}
+        .stitle{font-family:'Playfair Display',serif;font-size:clamp(2.2rem,5vw,3.2rem);font-weight:900;line-height:1.1;margin-bottom:1.5rem}
+        .stitle em{font-style:italic;background:linear-gradient(135deg,var(--gold),var(--goldl));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .btnp{display:inline-flex;align-items:center;background:var(--gold);color:var(--black);border:none;padding:.85rem 2rem;font-size:.78rem;letter-spacing:.15em;text-transform:uppercase;font-weight:600;transition:all .3s}
+        .btnp:hover{background:var(--goldl);transform:translateY(-2px)}
+        .btns{display:inline-flex;align-items:center;border:1px solid rgba(247,245,240,.2);color:var(--white);background:none;padding:.85rem 2rem;font-size:.78rem;letter-spacing:.15em;text-transform:uppercase;font-weight:500;transition:all .3s}
+        .btns:hover{border-color:var(--gold);color:var(--gold)}
+        .proj-card{background:#0d0d0d;border:1px solid rgba(255,255,255,.06);overflow:hidden;transition:transform .4s cubic-bezier(.16,1,.3,1)}
+        .proj-card:hover{transform:translateY(-5px)}
+        .proj-overlay{opacity:0;transition:opacity .35s ease;position:absolute;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center}
+        .proj-card:hover .proj-overlay{opacity:1}
+        .pc2{border:1px solid rgba(10,10,10,.1);padding:2rem 1.75rem;position:relative;border-radius:1rem;background:var(--white);transition:all .4s}
+        .pc2:hover{transform:translateY(-4px);box-shadow:0 14px 45px rgba(0,0,0,.08)}
+        .pc2.hl{background:var(--black);color:var(--white);border-color:var(--gold)}
+        .vinput{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:1rem;padding:1.2rem 1.5rem;color:var(--white);font-size:.85rem;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .3s}
+        .vinput:focus{border-color:var(--gold)}
+        .vinput::placeholder{color:rgba(247,245,240,.18)}
+        .vspin{width:44px;height:44px;border:2px solid rgba(201,168,76,.15);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 1.5rem}
+        .vresult{animation:fadeUp .5s ease forwards;max-width:680px;margin:0 auto}
+        .rarg{display:flex;gap:.65rem;font-size:.85rem;line-height:1.6;color:rgba(247,245,240,.7)}
+        .pastep{display:flex;gap:1rem;padding:1rem 1.25rem;border-bottom:1px solid rgba(247,245,240,.04)}
+        .pastep:last-child{border-bottom:none}
+        .fq{width:100%;display:flex;justify-content:space-between;align-items:center;background:none;border:none;color:var(--white);padding:1.25rem 0;font-family:'DM Sans',sans-serif;font-size:.88rem;text-align:left;transition:color .3s}
+        .fq:hover{color:var(--gold)}
+        .ficon{width:22px;height:22px;border:1px solid var(--gold);display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:.75rem;color:var(--gold);flex-shrink:0;transition:transform .3s}
+        .ficon.op{transform:rotate(45deg)}
+        .fa{font-size:.83rem;line-height:1.7;color:var(--muted);max-height:0;overflow:hidden;transition:all .4s ease}
+        .fa.op{max-height:200px;padding-bottom:1.2rem}
+        .finput{width:100%;padding:.9rem 1.1rem;border:1px solid rgba(10,10,10,.12);color:rgba(10,10,10,.8);font-size:.85rem;font-family:'DM Sans',sans-serif;border-radius:.5rem;background:var(--white);transition:border-color .3s;outline:none}
+        .finput:focus{border-color:var(--gold)}
+        .finput::placeholder{color:rgba(10,10,10,.28)}
+        select.finput{cursor:pointer;-webkit-appearance:none}
+        textarea.finput{resize:vertical;min-height:110px}
+        .fsub{background:var(--black);color:var(--white);padding:1rem;border:none;font-size:.78rem;letter-spacing:.15em;text-transform:uppercase;font-weight:600;border-radius:.5rem;transition:all .3s;width:100%}
+        .fsub:hover{background:var(--gold);color:var(--black)}
+        .ctable{width:100%;border-collapse:collapse;min-width:540px}
+        .ctable th{padding:.85rem 1rem;font-size:.66rem;letter-spacing:.15em;text-transform:uppercase}
+        .ctable th:first-child{text-align:left}
+        .ctable td{padding:.72rem 1rem;font-size:.82rem;text-align:center;border-bottom:1px solid rgba(10,10,10,.06)}
+        .ctable td:first-child{text-align:left;color:rgba(10,10,10,.5);font-size:.78rem}
+        .tdhl{background:rgba(10,10,10,.02);border-left:1px solid rgba(201,168,76,.12)}
+        .ctable tr:last-child td{border-bottom:none}
+        footer{background:var(--black);padding:2.5rem;border-top:1px solid rgba(247,245,240,.06)}
+        .fin{max-width:1060px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1.5rem}
+      `}</style>
+
+      <div ref={curRef} className="cur"/>
+      <div ref={folRef} className="fol"/>
+
+      {/* MOBILE MENU */}
+      <div className={`mobmenu ${menuOpen?"op":""}`}>
+        {Object.entries(t.nav).map(([id,label]: [string, string]) => (
+          <button key={id} className="mml" onClick={()=>scrollTo(id)}>{label}</button>
+        ))}
+        <div style={{display:"flex",gap:"1rem",marginTop:"1rem"}}>
+          {["FR","EN","PT"].map(l=>(
+            <button key={l} className="lb" onClick={()=>{setLang(l);setMenuOpen(false);}} style={{color:lang===l?GOLD:"rgba(255,255,255,.3)",borderBottom:lang===l?`1px solid ${GOLD}`:"1px solid transparent"}}>{l}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* NAV */}
+      <nav className={scrolled?"sc":""}>
+        <button className="logo" onClick={()=>window.scrollTo({top:0,behavior:"smooth"})}>
+          The Lil <em>Ax</em>
+        </button>
+        <div className="navlinks">
+          {Object.entries(t.nav).map(([id,label]: [string, string])=>(
+            <button key={id} className="nl" onClick={()=>scrollTo(id)}>{label}</button>
+          ))}
+          <button className="nc" onClick={()=>scrollTo("contact")}>{t.hero.cta}</button>
+          <div className="lang-wrap">
+            {["FR","EN","PT"].map(l=>(
+              <button key={l} className="lb" onClick={()=>setLang(l)} style={{color:lang===l?GOLD:"rgba(255,255,255,.28)",borderBottom:lang===l?`1px solid ${GOLD}`:"1px solid transparent",fontWeight:lang===l?600:300}}>{l}</button>
+            ))}
+          </div>
+        </div>
+        <button className={`burger ${menuOpen?"op":""}`} onClick={()=>setMenuOpen(!menuOpen)}>
+          <span/><span/><span/>
+        </button>
+      </nav>
+
+      {/* HERO */}
+      <section style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",position:"relative",overflow:"hidden"}}>
+        <div style={{position:"absolute",inset:0,opacity:.04,backgroundImage:`url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='a'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23a)'/%3E%3C/svg%3E")`}}/>
+        <div style={{position:"relative",zIndex:2,textAlign:"center",padding:"0 1.5rem",maxWidth:620}}>
+          <p style={{fontSize:".65rem",letterSpacing:".35em",textTransform:"uppercase",color:GOLD,marginBottom:"1.5rem",animation:"heroIn 1s ease .3s both"}}>{t.hero.eyebrow}</p>
+          <h1 style={{fontFamily:"'Playfair Display',serif",fontWeight:900,lineHeight:1.1,marginBottom:"1.5rem"}}>
+            {t.hero.title.map((line,i)=>(
+              <span key={i} style={{display:"block",fontSize:"clamp(2.4rem,6.5vw,4rem)",animation:`heroIn 1s ease ${.5+i*.15}s both`,color:i===2?GOLD:WHITE,fontStyle:i===2?"italic":"normal"}}>
+                {line}
+              </span>
+            ))}
+          </h1>
+          <p style={{fontSize:".95rem",color:MUTED,maxWidth:460,margin:"0 auto",lineHeight:1.75,whiteSpace:"pre-line",animation:"heroIn 1s ease .9s both"}}>{t.hero.sub}</p>
+          <div style={{display:"flex",gap:"1rem",justifyContent:"center",flexWrap:"wrap",marginTop:"2rem",animation:"heroIn 1s ease 1.1s both"}}>
+            <button className="btnp" onClick={()=>scrollTo("offres")}>{t.hero.cta}</button>
+            <button className="btns" onClick={()=>scrollTo("testeur")}>{t.hero.ctaSub}</button>
+          </div>
+        </div>
+        <div style={{position:"absolute",bottom:"2.5rem",left:"50%",transform:"translateX(-50%)",textAlign:"center"}}>
+          <span style={{fontSize:".6rem",letterSpacing:".25em",textTransform:"uppercase",color:MUTED,display:"block",marginBottom:".5rem"}}>Découvrir</span>
+          <div style={{width:1,height:"2.5rem",background:`linear-gradient(to bottom,${GOLD},transparent)`,margin:"0 auto",animation:"bounce 2s infinite"}}/>
+        </div>
+      </section>
+
+      {/* STATS BAND */}
+      <div style={{background:GOLD,padding:"1.2rem 2rem",display:"flex",justifyContent:"center",gap:"3rem",flexWrap:"wrap"}}>
+        {t.stats.map((s,i)=>(
+          <div key={i} style={{textAlign:"center"}}>
+            <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.8rem",fontWeight:900,color:BLACK,lineHeight:1}}>{s.n}</div>
+            <div style={{fontSize:".6rem",letterSpacing:".2em",textTransform:"uppercase",color:"rgba(10,10,10,.5)"}}>{s.l}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* RÉALISATIONS */}
+      <section id="realisations" className="seclight seclight-first">
+        <div className="ctn">
+          <p className="eye eyed reveal">{t.realisations.label}</p>
+          <h2 className="stitle reveal d1">
+            {t.realisations.title[0]}<br/><em>{t.realisations.title[1]}</em>
+          </h2>
+          <p style={{fontSize:".88rem",color:"rgba(10,10,10,.45)",marginBottom:"2.5rem"}} className="reveal d2">{t.realisations.sub}</p>
+
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:"1.2rem"}} className="reveal d3">
+            {t.realisations.projects.map((proj,i)=>{
+              const Preview = Previews[i];
+              return (
+                <div key={i} className="proj-card" style={{position:"relative"}}>
+                  <div style={{background:"#111",padding:"7px 10px",display:"flex",alignItems:"center",gap:"5px",borderBottom:"1px solid rgba(255,255,255,.05)"}}>
+                    <div style={{width:7,height:7,borderRadius:"50%",background:"#ff5f57"}}/>
+                    <div style={{width:7,height:7,borderRadius:"50%",background:"#febc2e"}}/>
+                    <div style={{width:7,height:7,borderRadius:"50%",background:"#28c840"}}/>
+                    <div style={{flex:1,background:"#1a1a1a",borderRadius:3,height:14,marginLeft:8,display:"flex",alignItems:"center",paddingLeft:7}}>
+                      <span style={{fontSize:7,opacity:.28}}>{proj.name.toLowerCase().replace(" ","")}.fr</span>
+                    </div>
+                  </div>
+                  <div style={{height:190,position:"relative",overflow:"hidden"}}>
+                    <Preview accent={proj.accent} bg={proj.bg} text={proj.text}/>
+                    <div className="proj-overlay">
+                      <span style={{color:GOLD,fontSize:10,letterSpacing:".2em",textTransform:"uppercase",borderBottom:`1px solid ${GOLD}`,paddingBottom:3}}>{t.realisations.visit}</span>
+                    </div>
+                  </div>
+                  <div style={{padding:"1.2rem 1.4rem",background:"#0d0d0d"}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:".4rem"}}>
+                      <span style={{fontFamily:"'Playfair Display',serif",fontSize:".95rem",color:WHITE}}>{proj.name}</span>
+                      <span style={{fontSize:7,letterSpacing:".12em",textTransform:"uppercase",color:GOLD,border:`1px solid ${GOLD}`,padding:"2px 6px",opacity:.7}}>{proj.badge}</span>
+                    </div>
+                    <div style={{fontSize:11,color:"rgba(255,255,255,.32)",marginBottom:".7rem"}}>{proj.role}</div>
+                    <div style={{width:"100%",height:1,background:"rgba(255,255,255,.05)",marginBottom:".7rem"}}/>
+                    <div style={{fontSize:10,color:GOLD,opacity:.6,letterSpacing:".06em"}}>{proj.tier}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <p style={{textAlign:"center",marginTop:"2rem",fontSize:".75rem",color:"rgba(10,10,10,.3)"}} className="reveal">{t.realisations.note}</p>
+        </div>
+      </section>
+
+      {/* TESTEUR IA */}
+      <section id="testeur" style={{padding:"6rem 2rem 8rem",background:BLACK,position:"relative",overflow:"hidden"}}>
+        <div style={{maxWidth:"56rem",margin:"0 auto",position:"relative",zIndex:10}}>
+          <div className="reveal" style={{textAlign:"center",marginBottom:"3.5rem"}}>
+            <span className="eye" style={{display:"block",marginBottom:"1rem"}}>{t.testeur.label}</span>
+            <h2 style={{fontFamily:"'Playfair Display',serif",fontSize:"clamp(2rem,5vw,3rem)",fontWeight:900,fontStyle:"italic",whiteSpace:"pre-line"}}>{t.testeur.title}</h2>
+          </div>
+
+          <div style={{background:"#141414",border:"1px solid rgba(255,255,255,.1)",borderRadius:"1.5rem",boxShadow:"0 25px 50px rgba(0,0,0,.5)",overflow:"hidden"}}>
+            <div style={{padding:"clamp(1.5rem,4vw,3.5rem)"}}>
+
+              {vStep==="form" && (
+                <form onSubmit={(e)=>{e.preventDefault();analyseIdea();}} style={{display:"flex",flexDirection:"column",gap:"1.8rem"}}>
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))",gap:"1.5rem"}}>
+                    {[{key:"activite",label:t.testeur.f1,ph:t.testeur.f1ph,req:true},{key:"cible",label:t.testeur.f2,ph:t.testeur.f2ph,req:false}].map(({key,label,ph,req})=>(
+                      <div key={key} style={{display:"flex",flexDirection:"column",gap:".6rem"}}>
+                        <label style={{fontSize:".62rem",textTransform:"uppercase",letterSpacing:".2em",color:"rgba(255,255,255,.32)",fontWeight:700}}>{label}</label>
+                        <input className="vinput" type="text" placeholder={ph} value={vForm[key]} onChange={e=>setVForm({...vForm,[key]:e.target.value})}/>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{display:"flex",flexDirection:"column",gap:".6rem"}}>
+                    <label style={{fontSize:".62rem",textTransform:"uppercase",letterSpacing:".2em",color:"rgba(255,255,255,.32)",fontWeight:700}}>{t.testeur.f3}</label>
+                    <textarea className="vinput" rows={4} placeholder={t.testeur.f3ph} value={vForm.description} onChange={e=>setVForm({...vForm,description:e.target.value})} style={{resize:"none",borderRadius:"1rem"}}/>
+                  </div>
+                  <button type="submit" disabled={!vForm.activite||!vForm.description} style={{width:"100%",padding:"1.4rem",background:GOLD,color:BLACK,fontWeight:700,borderRadius:"1rem",border:"none",fontSize:".85rem",letterSpacing:".1em",transition:"all .3s",opacity:!vForm.activite||!vForm.description?.35:1}}>
+                    {t.testeur.btn}
+                  </button>
+                </form>
+              )}
+
+              {vStep==="loading" && (
+                <div style={{textAlign:"center",padding:"4rem 0"}}>
+                  <div className="vspin"/>
+                  <p style={{fontSize:".82rem",color:"rgba(247,245,240,.38)"}}>{t.testeur.loading}</p>
+                </div>
+              )}
+
+              {vStep==="result" && vResult && (
+                <div className="vresult">
+                  <div style={{display:"flex",alignItems:"center",gap:"1.25rem",marginBottom:"1.75rem"}}>
+                    <div style={{width:72,height:72,display:"flex",alignItems:"center",justifyContent:"center",borderRadius:"50%",border:`2px solid ${noteColor(vResult.note)}`}}>
+                      <span style={{fontFamily:"'Playfair Display',serif",fontSize:"2rem",fontWeight:900,color:noteColor(vResult.note)}}>{vResult.note}</span>
+                    </div>
+                    <div>
+                      <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.35rem",fontWeight:700}}>{vResult.titre}</div>
+                      <div style={{fontSize:".65rem",letterSpacing:".2em",textTransform:"uppercase",color:noteColor(vResult.note),marginTop:".25rem"}}>{noteLabel(vResult.note)}</div>
+                    </div>
+                  </div>
+                  <ul style={{listStyle:"none",marginBottom:"1.75rem",display:"flex",flexDirection:"column",gap:".5rem"}}>
+                    {vResult.arguments?.map((arg,i)=>(
+                      <li key={i} className="rarg"><span style={{color:GOLD,fontWeight:700,flexShrink:0}}>✓</span> {arg}</li>
+                    ))}
+                  </ul>
+                  {vResult.plan_action?.length>0 && (
+                    <div style={{border:"1px solid rgba(247,245,240,.08)",borderRadius:".75rem",overflow:"hidden",marginBottom:"1.5rem"}}>
+                      <div style={{padding:"1rem 1.25rem",background:"rgba(247,245,240,.04)",borderBottom:"1px solid rgba(247,245,240,.06)"}}>
+                        <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1rem",fontWeight:700}}>{t.testeur.planTitle}</div>
+                        <div style={{fontSize:".72rem",color:MUTED,marginTop:".2rem"}}>{t.testeur.planSub}</div>
+                      </div>
+                      <ul style={{listStyle:"none"}}>
+                        {vResult.plan_action.map((item,i)=>(
+                          <li key={i} className="pastep">
+                            <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.3rem",fontWeight:900,color:GOLD,minWidth:28}}>0{i+1}</div>
+                            <div>
+                              <div style={{fontSize:".78rem",letterSpacing:".12em",textTransform:"uppercase",fontWeight:600}}>{item.etape}</div>
+                              <div style={{fontSize:".85rem",color:"rgba(247,245,240,.65)",lineHeight:1.6,marginTop:".25rem"}}>{item.action}</div>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  <div style={{background:"rgba(247,245,240,.03)",border:"1px solid rgba(247,245,240,.08)",borderRadius:"1rem",padding:"1.75rem",textAlign:"center"}}>
+                    <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.1rem",fontWeight:700,marginBottom:".5rem"}}>{t.testeur.guideTitle}</div>
+                    <div style={{fontSize:".8rem",color:MUTED,marginBottom:"1rem"}}>{t.testeur.guideSub}</div>
+                    <button onClick={()=>setVModal(true)} style={{display:"block",width:"100%",background:GOLD,color:BLACK,border:"none",padding:".85rem",fontSize:".75rem",letterSpacing:".15em",textTransform:"uppercase",fontWeight:600,borderRadius:".5rem",marginBottom:".5rem"}}>{t.testeur.guideBtn}</button>
+                    <button onClick={resetV} style={{display:"block",width:"100%",background:"none",border:"1px solid rgba(247,245,240,.18)",color:"rgba(247,245,240,.65)",padding:".75rem",fontSize:".72rem",letterSpacing:".12em",textTransform:"uppercase",borderRadius:".5rem"}}>{t.testeur.resetBtn}</button>
+                  </div>
+                </div>
+              )}
+
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* PROCESS */}
+      <section id="process" className="seclight">
+        <div className="ctn">
+          <p className="eye eyed reveal">{t.process.label}</p>
+          <h2 className="stitle reveal d1">{t.process.title[0]}<br/><em>{t.process.title[1]}</em></h2>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:"1.5rem",maxWidth:900,margin:"2rem auto 0"}}>
+            {t.process.steps.map((s,i)=>(
+              <div key={i} className={`reveal d${i+1}`} style={{textAlign:"center",padding:"1.5rem .75rem"}}>
+                <div style={{fontFamily:"'Playfair Display',serif",fontSize:"3.5rem",fontWeight:900,color:GOLD,lineHeight:1}}>{s.n}</div>
+                <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1rem",fontWeight:700,margin:".75rem 0 .5rem",color:BLACK}}>{s.t}</div>
+                <div style={{fontSize:".8rem",color:"rgba(10,10,10,.48)",lineHeight:1.65}}>{s.d}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* GUARANTEES BAND */}
+      <div style={{background:CHAR,padding:"2.5rem 2rem",display:"flex",justifyContent:"center",gap:"2.5rem",flexWrap:"wrap"}}>
+        {t.guarantees.map((g,i)=>(
+          <div key={i} className="reveal" style={{display:"flex",alignItems:"center",gap:".85rem"}}>
+            <div style={{fontSize:"1.6rem"}}>{g.icon}</div>
+            <div>
+              <div style={{fontSize:".85rem",fontWeight:500,color:WHITE}}>{g.m}</div>
+              <div style={{fontSize:".68rem",color:MUTED,marginTop:".1rem"}}>{g.s}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* OFFRES */}
+      <section id="offres" className="seclight">
+        <div className="ctn">
+          <p className="eye eyed reveal">{t.offres.label}</p>
+          <h2 className="stitle reveal d1">{t.offres.title[0]}<br/><em>{t.offres.title[1]}</em></h2>
+          <p style={{fontSize:".82rem",color:"rgba(10,10,10,.38)",marginBottom:"2.5rem"}} className="reveal d2">{t.offres.note}</p>
+
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:"1.2rem"}}>
+            {t.offres.plans.map((plan,i)=>(
+              <div key={i} className={`pc2 reveal d${i+1} ${plan.hl?"hl":""}`}>
+                {plan.badge && <div style={{position:"absolute",top:"-1px",left:"50%",transform:"translateX(-50%)",background:GOLD,color:BLACK,fontSize:".6rem",letterSpacing:".15em",textTransform:"uppercase",padding:".35rem 1rem",fontWeight:700,borderRadius:"0 0 .5rem .5rem"}}>{plan.badge}</div>}
+                <div style={{fontSize:".6rem",letterSpacing:".3em",color:GOLD,textTransform:"uppercase",marginBottom:".5rem"}}>{plan.num}</div>
+                <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.7rem",fontWeight:900,marginBottom:".5rem"}}>{plan.name}</div>
+                <div style={{marginBottom:".5rem"}}>
+                  <span style={{fontFamily:"'Playfair Display',serif",fontSize:"2.8rem",fontWeight:900}}>{plan.price}</span>
+                  <span style={{fontSize:".75rem",opacity:.4,marginLeft:".25rem"}}>{plan.sub}</span>
+                </div>
+                <p style={{fontSize:".82rem",lineHeight:1.6,opacity:.55,margin:".85rem 0 1.5rem"}}>{plan.desc}</p>
+                <ul style={{listStyle:"none",marginBottom:"1.75rem"}}>
+                  {plan.features.map((f,j)=>(
+                    <li key={j} style={{display:"flex",alignItems:"flex-start",gap:".55rem",fontSize:".82rem",lineHeight:1.6,marginBottom:".5rem",opacity:plan.hl?.7:.7}}>
+                      <span style={{color:GOLD,fontWeight:700,flexShrink:0}}>✓</span>{f}
+                    </li>
+                  ))}
+                </ul>
+                <button onClick={()=>scrollTo("contact")} style={{display:"block",width:"100%",textAlign:"center",padding:".85rem",fontSize:".75rem",letterSpacing:".15em",textTransform:"uppercase",fontWeight:600,border:"none",borderRadius:".5rem",background:plan.hl?GOLD:BLACK,color:plan.hl?BLACK:WHITE,transition:"all .3s"}}>{plan.cta}</button>
+              </div>
+            ))}
+          </div>
+
+          {/* TABLEAU COMPARATIF */}
+          <div style={{marginTop:"4rem"}} className="reveal">
+            <p className="eye eyed" style={{marginBottom:".5rem"}}>{t.offres.compare}</p>
+            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:"1.5rem",fontWeight:900,marginBottom:"1.5rem",color:BLACK}}>
+              {t.offres.compareTitle} <em style={{fontStyle:"italic",background:`linear-gradient(135deg,${GOLD},${GOLDL})`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>{t.offres.compareEm}</em>
+            </h3>
+            <div style={{overflowX:"auto"}}>
+              <table className="ctable">
+                <thead>
+                  <tr>
+                    <th style={{textAlign:"left",fontSize:".68rem",letterSpacing:".15em",textTransform:"uppercase",background:"rgba(10,10,10,.04)",color:"rgba(10,10,10,.4)"}}>Fonctionnalité</th>
+                    <th style={{background:"rgba(10,10,10,.04)",color:"rgba(10,10,10,.55)"}}>
+                      <span style={{fontFamily:"'Playfair Display',serif",fontSize:"1rem",fontWeight:900}}>{t.offres.plans[0].name}</span><br/>
+                      <span style={{fontSize:".72rem",opacity:.5}}>{t.offres.plans[0].price}</span>
+                    </th>
+                    <th style={{background:BLACK,color:GOLD,borderLeft:`1px solid ${GOLD}`}}>
+                      <span style={{fontFamily:"'Playfair Display',serif",fontSize:"1rem",fontWeight:900}}>{t.offres.plans[1].name}</span><br/>
+                      <span style={{fontSize:".72rem",opacity:.7}}>{t.offres.plans[1].price}</span>
+                    </th>
+                    <th style={{background:"rgba(10,10,10,.04)",color:"rgba(10,10,10,.55)"}}>
+                      <span style={{fontFamily:"'Playfair Display',serif",fontSize:"1rem",fontWeight:900}}>{t.offres.plans[2].name}</span><br/>
+                      <span style={{fontSize:".72rem",opacity:.5}}>{t.offres.plans[2].price}</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {t.offres.rows.map((row,i)=>(
+                    <tr key={i}>
+                      <td>{row.label}</td>
+                      <td><Cell v={row.e}/></td>
+                      <td className="tdhl"><Cell v={row.s}/></td>
+                      <td><Cell v={row.p}/></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div style={{textAlign:"center",marginTop:"2rem"}}>
+              <button className="btnp" onClick={()=>scrollTo("contact")}>{t.offres.startCta}</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section id="faq" className="secdark">
+        <div className="ctn">
+          <p className="eye reveal">{t.faq.label}</p>
+          <h2 className="stitle reveal d1" style={{color:WHITE,marginBottom:"2rem"}}>{t.faq.title}</h2>
+          <div style={{maxWidth:720,margin:"0 auto"}}>
+            {t.faq.items.map((item,i)=>(
+              <div key={i} style={{borderBottom:"1px solid rgba(247,245,240,.08)"}} className="reveal">
+                <button className="fq" onClick={()=>setOpenFaq(openFaq===i?null:i)}>
+                  <span>{item.q}</span>
+                  <span className={`ficon ${openFaq===i?"op":""}`}>+</span>
+                </button>
+                <div className={`fa ${openFaq===i?"op":""}`}>{item.a}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CONTACT */}
+      <section id="contact" style={{background:WHITE,color:BLACK,borderRadius:"2.5rem 2.5rem 0 0",padding:"5rem 2rem",position:"relative",zIndex:2,marginTop:"-1.5rem"}}>
+        <div style={{maxWidth:640,margin:"0 auto",textAlign:"center"}}>
+          <p className="eye eyed reveal">{t.contact.label}</p>
+          <h2 className="stitle reveal d1">{t.contact.title[0]}<br/><em>{t.contact.title[1]}</em></h2>
+          <p style={{fontSize:".88rem",color:"rgba(10,10,10,.45)",lineHeight:1.7}} className="reveal d2">{t.contact.sub}</p>
+          {contactSent ? (
+            <div className="reveal" style={{marginTop:"2.5rem",padding:"2rem",border:`1px solid ${GOLD}`,borderRadius:".75rem",color:BLACK,fontSize:".9rem"}}>✓ {t.contact.success}</div>
+          ) : (
+            <form className="reveal d3" onSubmit={e=>{e.preventDefault();setContactSent(true);}} style={{display:"flex",flexDirection:"column",gap:".9rem",marginTop:"2.5rem",textAlign:"left"}}>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:".9rem"}}>
+                <input className="finput" type="text" placeholder={t.contact.f1} required/>
+                <input className="finput" type="email" placeholder={t.contact.f2} required/>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:".9rem"}}>
+                <input className="finput" type="tel" placeholder={t.contact.f3}/>
+                <select className="finput">
+                  <option value="">{t.contact.f4}</option>
+                  {t.contact.sectors.map((s,i)=><option key={i}>{s}</option>)}
+                </select>
+              </div>
+              <select className="finput">
+                <option value="">{t.contact.f5}</option>
+                {t.contact.formulas.map((f,i)=><option key={i}>{f}</option>)}
+              </select>
+              <textarea className="finput" placeholder={t.contact.f6}/>
+              <button type="submit" className="fsub">{t.contact.btn}</button>
+            </form>
+          )}
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer>
+        <div className="fin">
+          <div style={{fontFamily:"'Playfair Display',serif",fontSize:"1.1rem",fontWeight:700,color:WHITE}}>The Lil <em style={{color:GOLD,fontStyle:"italic"}}>Ax</em></div>
+          <a href="https://instagram.com/thelilaxagency" target="_blank" rel="noopener noreferrer" style={{display:"flex",alignItems:"center",gap:".55rem",color:"rgba(247,245,240,.45)",textDecoration:"none",transition:"color .3s",fontSize:".75rem",letterSpacing:".08em"}}
+            onMouseEnter={e=>e.currentTarget.style.color=GOLD}
+            onMouseLeave={e=>e.currentTarget.style.color="rgba(247,245,240,.45)"}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+              <circle cx="12" cy="12" r="4"/>
+              <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
+            </svg>
+            @thelilaxagency
+          </a>
+          <div style={{display:"flex",gap:"1.25rem",alignItems:"center"}}>
+            {["FR","EN","PT"].map(l=>(
+              <button key={l} className="lb" onClick={()=>setLang(l)} style={{color:lang===l?GOLD:"rgba(255,255,255,.22)",borderBottom:lang===l?`1px solid ${GOLD}`:"1px solid transparent"}}>{l}</button>
+            ))}
+          </div>
+          <p style={{fontSize:".65rem",color:MUTED}}>{t.footer.copy}</p>
+        </div>
+      </footer>
+
+      {/* WHATSAPP FLOTTANT */}
+      <a
+        href="https://wa.me/33766079184?text=Bonjour%2C%20j%27aimerais%20en%20savoir%20plus%20sur%20vos%20offres%20WaaS."
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          position:"fixed",bottom:"1.75rem",right:"1.75rem",zIndex:500,
+          width:56,height:56,borderRadius:"50%",
+          background:"#25D366",
+          display:"flex",alignItems:"center",justifyContent:"center",
+          boxShadow:"0 4px 24px rgba(37,211,102,.45)",
+          transition:"transform .25s ease, box-shadow .25s ease",
+          textDecoration:"none",
+        }}
+        onMouseEnter={e=>{e.currentTarget.style.transform="scale(1.1)";e.currentTarget.style.boxShadow="0 6px 32px rgba(37,211,102,.65)";}}
+        onMouseLeave={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.boxShadow="0 4px 24px rgba(37,211,102,.45)";}}
+        title="Discuter sur WhatsApp"
+      >
+        {/* Pulse ring */}
+        <span style={{
+          position:"absolute",inset:0,borderRadius:"50%",
+          border:"2px solid rgba(37,211,102,.5)",
+          animation:"waPulse 2s ease-out infinite",
+          pointerEvents:"none",
+        }}/>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+        </svg>
+        <style>{`@keyframes waPulse{0%{transform:scale(1);opacity:.6}100%{transform:scale(1.6);opacity:0}}`}</style>
+      </a>
+
+      {vModal && (
+        <div style={{position:"fixed",inset:0,zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,.85)",backdropFilter:"blur(8px)"}} onClick={()=>setVModal(false)}>
+          <div onClick={e=>e.stopPropagation()} style={{position:"relative",background:CHAR,border:"1px solid rgba(247,245,240,.1)",borderRadius:"1.25rem",padding:"2.5rem",maxWidth:440,width:"90%"}}>
+            <button onClick={()=>setVModal(false)} style={{position:"absolute",top:"1rem",right:"1rem",background:"none",border:"none",color:MUTED,fontSize:"1.2rem"}}>✕</button>
+            <h3 style={{fontFamily:"'Playfair Display',serif",fontSize:"1.3rem",fontWeight:700,color:WHITE,marginBottom:".5rem"}}>{t.testeur.modalTitle}</h3>
+            <p style={{fontSize:".82rem",color:MUTED,marginBottom:"1.5rem",lineHeight:1.6}}>
+              {t.testeur.modalSub} <strong style={{color:GOLD}}>{vForm.activite}</strong> ?
+            </p>
+            <input type="email" placeholder={t.testeur.modalPh} className="vinput" style={{marginBottom:"1rem"}} value={vEmail} onChange={e=>setVEmail(e.target.value)}/>
+            <button onClick={()=>setVModal(false)} style={{display:"block",width:"100%",background:GOLD,color:BLACK,border:"none",padding:".85rem",fontSize:".75rem",letterSpacing:".15em",textTransform:"uppercase",fontWeight:600,borderRadius:".5rem"}}>{t.testeur.modalBtn}</button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
